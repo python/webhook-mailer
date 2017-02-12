@@ -20,6 +20,8 @@ class ResponseExit(Exception):
 
 class Config:
 
+    allowed_branches = ['2.7', '3.5', '3.6', 'master']
+
     @property
     def sender(self):
         return os.environ.get('SENDER_EMAIL', 'mail@example.com')
@@ -110,6 +112,9 @@ class PushEvent:
             raise ResponseExit(status=http.HTTPStatus.UNSUPPORTED_MEDIA_TYPE, text=msg)
 
         payload = await self.request.json()
+        branch_name = self.payload['ref'].split('/').pop()
+        if branch_name not in self.config.allowed_branches:
+            raise ResponseExit(status=http.HTTPStatus.NO_CONTENT)
         email = Email(self.smtp, self.client, payload)
         _, message = await email.send_email(self.config.sender, self.config.recipient)
         return message
