@@ -10,7 +10,6 @@ import aiosmtplib
 
 
 class ResponseExit(Exception):
-    """Exception to raise when the current request should immediately exit."""
 
     def __init__(self, status=None, text=None) -> None:
         super().__init__()
