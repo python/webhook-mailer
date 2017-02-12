@@ -1,3 +1,5 @@
+# Design of the application is borrowed from python/the-knights-who-say-ni.
+
 import asyncio
 import http
 import os
