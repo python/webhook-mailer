@@ -2,6 +2,7 @@
 
 import asyncio
 import http
+import http.client
 import os
 import traceback
 import sys
@@ -65,6 +66,9 @@ class Email:
 
     async def get_diff(self, url):
         async with self.client.get(url) as response:
+            if response.status >= 300:
+                msg = f'unexpected response for {response.url!r}: {response.status}'
+                raise http.client.HTTPException(msg)
             return (await response.text())
 
     async def get_body(self):
