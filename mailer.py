@@ -22,12 +22,10 @@ class Config:
 
     @property
     def sender(self):
-        # TODO: Use python-checkins@python.org
         return os.environ.get('SENDER_EMAIL', 'mail@example.com')
 
     @property
     def recipient(self):
-        # TODO: Use python-checkins@python.org
         return os.environ.get('RECIPIENT_EMAIL', 'mail@example.com')
 
     @property
