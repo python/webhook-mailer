@@ -130,10 +130,9 @@ def create_handler(create_client, smtp_client, config):
                 return aiohttp.web.Response(status=http.HTTPStatus.INTERNAL_SERVER_ERROR)
     return handler
 
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
+
+def application(loop, config):
     app = aiohttp.web.Application(loop=loop)
-    config = Config()
     app.router.add_post('/', create_handler(
         lambda: aiohttp.ClientSession(loop=loop),
         lambda: aiosmtplib.SMTP(
@@ -141,4 +140,10 @@ if __name__ == '__main__':
         ),
         config,
     ))
+    return app
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    config = Config()
+    app = application(loop, config)
     aiohttp.web.run_app(app, port=config.http_port)
