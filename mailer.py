@@ -111,8 +111,7 @@ class PushEvent:
 
     async def process(self):
         if self.request.content_type != 'application/json':
-            msg = ('can only accept application/json, '
-                   'not {}').format(self.request.content_type)
+            msg = f'can only accept application/json, not {self.request.content_type}'
             raise ResponseExit(status=http.HTTPStatus.UNSUPPORTED_MEDIA_TYPE, text=msg)
         payload = await self.request.json()
         branch_name = payload['ref'].split('/').pop()
