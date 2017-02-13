@@ -114,6 +114,8 @@ class PushEvent:
             msg = f'can only accept application/json, not {self.request.content_type}'
             raise ResponseExit(status=http.HTTPStatus.UNSUPPORTED_MEDIA_TYPE, text=msg)
         payload = await self.request.json()
+        if len(payload['commits']) == 0:
+            raise ResponseExit(status=http.HTTPStatus.NO_CONTENT)
         branch_name = payload['ref'].split('/').pop()
         if branch_name not in self.config.allowed_branches:
             raise ResponseExit(status=http.HTTPStatus.NO_CONTENT)
