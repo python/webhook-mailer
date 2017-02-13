@@ -46,16 +46,12 @@ class Config:
         return int(os.environ.get('PORT', 8585))
 
 
-class Email:
+class Diff:
 
-    def __init__(self, smtp, client, config, payload):
-        self.smtp = smtp
+    def __init__(self, client, commit):
         self.client = client
-        self.payload = payload
-        self.config = config
-        self.commit = payload['commits'][0]
+        self.commit = commit
 
-    # TODO: Move this out of Email class
     def get_diff_stat(self):
         files = {
             'A': self.commit['added'],
@@ -68,27 +64,39 @@ class Email:
                 result.append('\n'.join(f'{key} {f}' for f in file_list))
         return '\n'.join(result)
 
-    # TODO: Move this out of Email class
-    async def get_diff(self, url):
+    async def fetch_diff(self, url):
         async with self.client.get(url) as response:
             if response.status >= 300:
                 msg = f'unexpected response for {response.url!r}: {response.status}'
                 raise http.client.HTTPException(msg)
             return (await response.text())
 
-    async def build_message(self):
+    async def get_output(self):
+        stat = self.get_diff_stat()
+        diff = await self.fetch_diff(self.commit['url'] + '.diff')
+        return stat, diff
+
+
+class Email:
+
+    def __init__(self, smtp, config, payload):
+        self.smtp = smtp
+        self.payload = payload
+        self.config = config
+        self.commit = payload['commits'][0]
+
+    def build_message(self):
         msg = email.message.EmailMessage()
         # TODO: Use committer name if it's not GitHub as sender name
         msg['From'] = email.utils.formataddr((self.commit['committer']['name'], self.config.sender))
         msg['To'] = self.config.recipient
-        msg.set_content(await self.build_message_body())
+        msg.set_content(self.build_message_body())
         return msg
 
-    async def build_message_body(self):
+    def build_message_body(self):
         commit = self.commit
         branch = self.payload['ref']
-        diff_stat = self.get_diff_stat()
-        diff = await self.get_diff(f"{commit['url']}.diff")
+        custom_data = self.payload['_custom_data']
         template = f"""\
 {commit['url']}
 commit: {commit['id']}
@@ -101,14 +109,14 @@ summary:
 {commit['message']}
 
 files:
-{diff_stat}
+{custom_data['diff_stat']}
 
-{diff}
+{custom_data['unified_diff']}
         """
         return template
 
     async def send_email(self):
-        message = await self.build_message()
+        message = self.build_message()
         async with self.smtp as smtp:
             await smtp.connect()
             return (await smtp.send_message(message))
@@ -132,7 +140,20 @@ class PushEvent:
         branch_name = payload['ref'].split('/').pop()
         if branch_name not in self.config.allowed_branches:
             raise ResponseExit(status=http.HTTPStatus.NO_CONTENT)
-        email = Email(self.smtp, self.client, self.config, payload)
+        # Since we use the 'squash and merge' button, there will
+        # always be single commit.
+        commit = payload['commits'][0]
+        diff = Diff(self.client, commit)
+        diff_stat, unified_diff = await diff.get_output()
+        custom_data = {
+            '_custom_data': {
+                'diff_stat': diff_stat,
+                'unified_diff': unified_diff,
+            }
+        }
+        # Yes, this is a hack.
+        payload.update(custom_data)
+        email = Email(self.smtp, self.config, payload)
         _, message = await email.send_email()
         return message
 
