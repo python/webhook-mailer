@@ -1,6 +1,8 @@
 # Design of the application is borrowed from python/the-knights-who-say-ni.
 
 import asyncio
+import email.message
+import email.utils
 import http
 import http.client
 import os
@@ -46,10 +48,11 @@ class Config:
 
 class Email:
 
-    def __init__(self, smtp, client, payload):
+    def __init__(self, smtp, client, config, payload):
         self.smtp = smtp
         self.client = client
         self.payload = payload
+        self.config = config
         self.commit = payload['commits'][0]
 
     def get_diff_stat(self):
@@ -71,7 +74,15 @@ class Email:
                 raise http.client.HTTPException(msg)
             return (await response.text())
 
-    async def get_body(self):
+    async def build_message(self):
+        msg = email.message.EmailMessage()
+        # TODO: Use committer name if it's not GitHub as sender name
+        msg['From'] = email.utils.formataddr((self.commit['committer']['name'], self.config.sender))
+        msg['To'] = self.config.recipient
+        msg.set_content(await self.build_message_body())
+        return msg
+
+    async def build_message_body(self):
         commit = self.commit
         branch = self.payload['ref']
         diff_stat = self.get_diff_stat()
@@ -94,11 +105,11 @@ files:
         """
         return template
 
-    async def send_email(self, sender, recipient):
-        body = await self.get_body()
+    async def send_email(self):
+        message = await self.build_message()
         async with self.smtp as smtp:
             await smtp.connect()
-            return (await smtp.sendmail(sender, [recipient], body))
+            return (await smtp.send_message(message))
 
 
 class PushEvent:
@@ -119,8 +130,8 @@ class PushEvent:
         branch_name = payload['ref'].split('/').pop()
         if branch_name not in self.config.allowed_branches:
             raise ResponseExit(status=http.HTTPStatus.NO_CONTENT)
-        email = Email(self.smtp, self.client, payload)
-        _, message = await email.send_email(self.config.sender, self.config.recipient)
+        email = Email(self.smtp, self.client, self.config, payload)
+        _, message = await email.send_email()
         return message
 
 
