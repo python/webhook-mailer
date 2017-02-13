@@ -55,6 +55,7 @@ class Email:
         self.config = config
         self.commit = payload['commits'][0]
 
+    # TODO: Move this out of Email class
     def get_diff_stat(self):
         files = {
             'A': self.commit['added'],
@@ -67,6 +68,7 @@ class Email:
                 result.append('\n'.join(f'{key} {f}' for f in file_list))
         return '\n'.join(result)
 
+    # TODO: Move this out of Email class
     async def get_diff(self, url):
         async with self.client.get(url) as response:
             if response.status >= 300:
