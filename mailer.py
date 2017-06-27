@@ -27,11 +27,17 @@ class Config:
 
     @property
     def sender(self):
-        return os.environ.get('SENDER_EMAIL', 'mail@example.com')
+        sender = os.environ.get('SENDER_EMAIL')
+        if sender is None:
+            raise ValueError('Set SENDER_EMAIL environment variable.')
+        return sender
 
     @property
     def recipient(self):
-        return os.environ.get('RECIPIENT_EMAIL', 'mail@example.com')
+        recipient = os.environ.get('RECIPIENT_EMAIL')
+        if recipient is None:
+            raise ValueError('Set RECIPIENT_EMAIL environment variable.')
+        return recipient
 
     @property
     def smtp_hostname(self):

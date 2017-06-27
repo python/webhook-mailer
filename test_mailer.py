@@ -31,6 +31,18 @@ index c2b4fc703f7..e0d0685fa7d 100644
 +foo
 """
 
+
+class FakeConfig(mailer.Config):
+
+    @property
+    def sender(self):
+        return 'sender@sender.com'
+
+    @property
+    def recipient(self):
+        return 'recipient@recipient.com'
+
+
 class FakeRequest:
 
     def __init__(self, payload={}, content_type='application/json'):
@@ -61,12 +73,13 @@ class FakeSMTP(aiosmtplib.SMTP):
 class MailerTestCase(AioHTTPTestCase):
 
     async def get_application(self, loop):
-        config = mailer.Config()
+        config = FakeConfig()
         return mailer.application(loop=loop, config=config)
 
     @unittest_run_loop
     async def test_wrong_content_type(self):
-        config = mailer.Config()
+        # TODO: Find a way to get rid of this boilerplate code.
+        config = FakeConfig()
         SMTP = unittest.mock.create_autospec(aiosmtplib.SMTP)
         smtp = SMTP(hostname=config.smtp_hostname, port=config.smtp_port, loop=self.loop)
         ClientSession = unittest.mock.create_autospec(aiohttp.ClientSession)
@@ -80,7 +93,7 @@ class MailerTestCase(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_empty_commits(self):
-        config = mailer.Config()
+        config = FakeConfig()
         SMTP = unittest.mock.create_autospec(aiosmtplib.SMTP)
         smtp = SMTP(hostname=config.smtp_hostname, port=config.smtp_port, loop=self.loop)
         ClientSession = unittest.mock.create_autospec(aiohttp.ClientSession)
@@ -93,7 +106,7 @@ class MailerTestCase(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_invalid_branch_name(self):
-        config = mailer.Config()
+        config = FakeConfig()
         SMTP = unittest.mock.create_autospec(aiosmtplib.SMTP)
         smtp = SMTP(hostname=config.smtp_hostname, port=config.smtp_port, loop=self.loop)
         ClientSession = unittest.mock.create_autospec(aiohttp.ClientSession)
@@ -110,7 +123,7 @@ class MailerTestCase(AioHTTPTestCase):
 
     @unittest_run_loop
     async def test_send_email(self):
-        config = mailer.Config()
+        config = FakeConfig()
         smtp = FakeSMTP(hostname=config.smtp_hostname, port=config.smtp_port, loop=self.loop)
         # TODO: Mock Transport so we can run tests without needing internet connection
         client_session = aiohttp.ClientSession(loop=self.loop)
@@ -121,14 +134,25 @@ class MailerTestCase(AioHTTPTestCase):
         self.assertEqual(result, 'Ok')
         self.assertEqual(len(smtp.sent_mails), 1)
         mail = smtp.sent_mails[0]
-        self.assertEqual(mail['From'], 'Berker Peksag <mail@example.com>')
-        self.assertEqual(mail['To'], 'mail@example.com')
+        self.assertEqual(mail['From'], 'Berker Peksag <sender@sender.com>')
+        self.assertEqual(mail['To'], 'recipient@recipient.com')
         body = mail.get_body().as_string()
         # TODO: We probably need a FakeDiff object to avoid making HTTP requests.
         self.assertIn(diff, body)
         self.assertIn('author: cbiggles <berker.peksag+cbiggles@gmail.com>', body)
         self.assertIn('committer: Berker Peksag <berker.peksag@gmail.com>', body)
 
+
+class ConfigTestCase(unittest.TestCase):
+
+    def test_required_env_variables(self):
+        config = mailer.Config()
+        with self.assertRaises(ValueError) as cm:
+            config.sender
+        self.assertEqual(str(cm.exception), 'Set SENDER_EMAIL environment variable.')
+        with self.assertRaises(ValueError) as cm:
+            config.recipient
+        self.assertEqual(str(cm.exception), 'Set RECIPIENT_EMAIL environment variable.')
 
 if __name__ == '__main__':
     unittest.main()
