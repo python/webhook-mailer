@@ -17,7 +17,7 @@ import aiosmtplib
 class ResponseExit(Exception):
 
     def __init__(self, status=None, text=None) -> None:
-        super().__init__()
+        super().__init__(text)
         self.response = aiohttp.web.Response(status=status.value, text=text)
 
 
@@ -48,8 +48,11 @@ class Config:
 
 class Diff:
 
-    def __init__(self, client, commit):
+    def __init__(self, client):
         self.client = client
+        self.commit = None
+
+    def set_commit_data(self, commit):
         self.commit = commit
 
     def get_diff_stat(self):
@@ -81,8 +84,8 @@ class Email:
 
     def __init__(self, smtp, config, payload):
         self.smtp = smtp
-        self.payload = payload
         self.config = config
+        self.payload = payload
         self.commit = payload['commits'][0]
 
     def build_message(self):
@@ -129,6 +132,8 @@ class PushEvent:
         self.client = client
         self.smtp = smtp
         self.request = request
+        # TODO: This is here to improve testability for now. Find a better solution.
+        self.diff = Diff(self.client)
 
     async def process(self):
         if self.request.content_type != 'application/json':
@@ -136,15 +141,15 @@ class PushEvent:
             raise ResponseExit(status=http.HTTPStatus.UNSUPPORTED_MEDIA_TYPE, text=msg)
         payload = await self.request.json()
         if len(payload['commits']) == 0:
-            raise ResponseExit(status=http.HTTPStatus.NO_CONTENT)
+            raise ResponseExit(status=http.HTTPStatus.NO_CONTENT, text='There is no commit to be processed.')
         branch_name = payload['ref'].split('/').pop()
         if branch_name not in self.config.allowed_branches:
-            raise ResponseExit(status=http.HTTPStatus.NO_CONTENT)
+            raise ResponseExit(status=http.HTTPStatus.NO_CONTENT, text='Invalid branch name.')
         # Since we use the 'squash and merge' button, there will
         # always be single commit.
         commit = payload['commits'][0]
-        diff = Diff(self.client, commit)
-        diff_stat, unified_diff = await diff.get_output()
+        self.diff.set_commit_data(commit)
+        diff_stat, unified_diff = await self.diff.get_output()
         custom_data = {
             '_custom_data': {
                 'diff_stat': diff_stat,
