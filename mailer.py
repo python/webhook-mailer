@@ -49,7 +49,7 @@ class Config:
 
     @property
     def http_port(self):
-        return int(os.environ.get('PORT', 8585))
+        return int(os.environ.get('HTTP_PORT', 8585))
 
 
 class Diff:
