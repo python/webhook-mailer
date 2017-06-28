@@ -122,7 +122,7 @@ files:
 {custom_data['diff_stat']}
 
 {custom_data['unified_diff']}
-        """
+"""
         return template
 
     async def send_email(self):
