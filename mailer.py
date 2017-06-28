@@ -99,6 +99,7 @@ class Email:
         # TODO: Use committer name if it's not GitHub as sender name
         msg['From'] = email.utils.formataddr((self.commit['committer']['name'], self.config.sender))
         msg['To'] = self.config.recipient
+        msg['Subject'] = self.commit['message'].split('\n')[0]
         msg.set_content(self.build_message_body())
         return msg
 

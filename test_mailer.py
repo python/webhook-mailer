@@ -136,6 +136,8 @@ class MailerTestCase(AioHTTPTestCase):
         mail = smtp.sent_mails[0]
         self.assertEqual(mail['From'], 'Berker Peksag <sender@sender.com>')
         self.assertEqual(mail['To'], 'recipient@recipient.com')
+        self.assertEqual(mail['Subject'], 'Update .gitignore')
+        self.assertNotIn('(cherry picked from commit 9d9ed0e5cceef45fd63dc1f7b3fe6e695da16e83)',mail['Subject'])
         body = mail.get_body().as_string()
         # TODO: We probably need a FakeDiff object to avoid making HTTP requests.
         self.assertIn(diff, body)
