@@ -1,5 +1,3 @@
-# Design of the application is borrowed from python/the-knights-who-say-ni.
-
 import asyncio
 import email.message
 import email.utils
