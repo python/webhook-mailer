@@ -126,17 +126,16 @@ def create_handler(create_client, smtp_client):
     return handler
 
 
-def application(loop):
+def application(loop, smtp):
     app = aiohttp.web.Application(loop=loop)
     app.router.add_post('/', create_handler(
         lambda: aiohttp.ClientSession(loop=loop),
-        lambda: aiosmtplib.SMTP(
-            hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop,
-        ),
+        lambda: smtp,
     ))
     return app
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    app = application(loop)
+    smtp = aiosmtplib.SMTP(hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop)
+    app = application(loop, smtp)
     aiohttp.web.run_app(app, port=HTTP_PORT)
