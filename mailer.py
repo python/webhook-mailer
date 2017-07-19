@@ -17,6 +17,8 @@ SENDER = os.environ.get("SENDER_EMAIL", "sender@example.com")
 RECIPIENT = os.environ.get("RECIPIENT_EMAIL", "recipient@example.com")
 SMTP_HOSTNAME = os.environ.get('SMTP_HOSTNAME', "localhost")
 SMTP_PORT = int(os.environ.get('SMTP_PORT', 1025))
+SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
 HTTP_PORT = int(os.environ.get('HTTP_PORT', 8585))
 
 class ResponseExit(Exception):
@@ -78,7 +80,8 @@ async def fetch_diff(client, url):
 
 async def send_email(smtp, message):
     async with smtp as server:
-        await server.connect()
+        await server.connect(hostname=SMTP_HOSTNAME, port=SMTP_PORT, use_tls=False)
+        await server.login(SMTP_USERNAME, SMTP_PASSWORD)
         return (await server.send_message(message))
 
 
