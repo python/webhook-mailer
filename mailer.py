@@ -19,7 +19,7 @@ SMTP_HOSTNAME = os.environ.get('SMTP_HOSTNAME', "localhost")
 SMTP_PORT = int(os.environ.get('SMTP_PORT', 1025))
 SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
-HTTP_PORT = int(os.environ.get('HTTP_PORT', 8585))
+PORT = int(os.environ.get('PORT', 8585))
 
 class ResponseExit(Exception):
 
@@ -141,4 +141,4 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     smtp = aiosmtplib.SMTP(hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop)
     app = application(loop, smtp)
-    aiohttp.web.run_app(app, port=HTTP_PORT)
+    aiohttp.web.run_app(app, port=PORT)
