@@ -83,7 +83,8 @@ async def send_email(smtp, message):
         await server.connect()
         # Call ehlo() as a workaround for cole/aiosmtplib/#13.
         await server.ehlo()
-        await server.login(SMTP_USERNAME, SMTP_PASSWORD)
+        if SMTP_USERNAME is not None and SMTP_PASSWORD is not None:
+            await server.login(SMTP_USERNAME, SMTP_PASSWORD)
         return (await server.send_message(message))
 
 

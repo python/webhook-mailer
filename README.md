@@ -21,8 +21,8 @@ webhook:
 * `RECIPIENT_EMAIL`: This is required.
 * `SMTP_HOSTNAME`: This is optional. Defaults to `'localhost'`.
 * `SMTP_PORT`: This is optional. Defaults to `1025`.
-* `SMTP_USERNAME`: This is required.
-* `SMTP_PASSWORD`: This is required.
+* `SMTP_USERNAME`: This is optional.
+* `SMTP_PASSWORD`: This is optional.
 * `PORT`: This is optional. Defaults to `8585`.
 
 
