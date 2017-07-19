@@ -65,14 +65,15 @@ class FakeSMTP(aiosmtplib.SMTP):
 
 def make_request(method, path, *, loop=None, headers=sentinel, data=None):
     if headers is sentinel:
-        headers = {'content-type': 'application/json'}
+        headers = {'Content-Type': 'application/json'}
+    elif 'Content-Type' not in headers:
+        headers['Content-Type'] = 'application/json'
     if data is not None:
         data = json.dumps(data).encode()
         payload = streams.StreamReader(loop=loop)
         payload.feed_data(data)
         payload.feed_eof()
-        headers.update({'Content-Type': 'application/json',
-                        'Content-Length': str(len(data))})
+        headers.update({'Content-Length': str(len(data))})
     else:
         payload = sentinel
     return make_mocked_request(method, path, headers=headers, payload=payload)
