@@ -1,1 +1,1 @@
-web: python3 -m mailer
+web: python3 demo.py
