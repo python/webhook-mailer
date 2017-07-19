@@ -5,6 +5,10 @@ from email.mime.text import MIMEText
 
 import aiosmtplib
 
+print('-----')
+print('Password:', os.environ['SMTP_PASSWORD'])
+print('-----')
+
 loop = asyncio.get_event_loop()
 smtp = aiosmtplib.SMTP(hostname=os.environ['SMTP_HOSTNAME'], port=os.environ['SMTP_PORT'], loop=loop, use_tls=False)
 loop.run_until_complete(smtp.connect())
