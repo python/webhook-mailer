@@ -48,6 +48,12 @@ class FakeSMTP(aiosmtplib.SMTP):
         super().__init__(*args, **kwargs)
         self.sent_mails = []
 
+    async def ehlo(self):
+        return aiosmtplib.response.SMTPResponse(250, 'EHLO')
+
+    async def login(self, username, password):
+        return aiosmtplib.response.SMTPResponse(235, 'AUTH')
+
     async def connect(self, *args, **kwargs):
         return aiosmtplib.response.SMTPResponse(100, 'ok')
 
