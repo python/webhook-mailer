@@ -1,1 +1,1 @@
-web: python3 mailer.py
+web: gunicorn mailer:application --config gunicorn_config.py
