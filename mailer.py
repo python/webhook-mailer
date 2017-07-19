@@ -11,8 +11,6 @@ import aiohttp
 import aiohttp.web
 import aiosmtplib
 
-from aiosmtplib.errors import SMTPAuthenticationError
-
 
 ALLOWED_BRANCHES = ["2.7", "3.5", "3.6", "master"]
 SENDER = os.environ.get("SENDER_EMAIL", "sender@example.com")
@@ -83,12 +81,9 @@ async def fetch_diff(client, url):
 async def send_email(smtp, message):
     async with smtp as server:
         await server.connect()
+        # Call ehlo() as a workaround for cole/aiosmtplib/#13.
         await server.ehlo()
-        print('CONNECTED')
-        try:
-            await server.login(SMTP_USERNAME, SMTP_PASSWORD)
-        except SMTPAuthenticationError as exc:
-            print(exc)
+        await server.login(SMTP_USERNAME, SMTP_PASSWORD)
         return (await server.send_message(message))
 
 
