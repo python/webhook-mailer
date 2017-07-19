@@ -21,13 +21,15 @@ webhook:
 * `RECIPIENT_EMAIL`: This is required.
 * `SMTP_HOSTNAME`: This is optional. Defaults to `'localhost'`.
 * `SMTP_PORT`: This is optional. Defaults to `1025`.
-* `HTTP_PORT`: This is optional. Defaults to `8585`.
+* `SMTP_USERNAME`: This is required.
+* `SMTP_PASSWORD`: This is required.
+* `PORT`: This is optional. Defaults to `8585`.
 
 
 ## Usage
 
 ```sh
-$ SENDER_EMAIL=sender@example.com RECIPIENT_EMAIL=recipient@example.com python3 mailer.py
+$ SENDER_EMAIL=sender@example.com RECIPIENT_EMAIL=recipient@example.com SMTP_USERNAME=spam SMTP_PASSWORD=eggs python3 mailer.py
 ```
 
 
