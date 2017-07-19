@@ -83,6 +83,7 @@ async def fetch_diff(client, url):
 async def send_email(smtp, message):
     async with smtp as server:
         await server.connect()
+        await server.ehlo()
         print('CONNECTED')
         try:
             await server.login(SMTP_USERNAME, SMTP_PASSWORD)
