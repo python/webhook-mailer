@@ -3,6 +3,11 @@ import json
 import aiohttp
 import aiosmtplib
 import aiosmtplib.response
+import pytest
+
+from aiohttp.helpers import sentinel
+from aiohttp import streams
+from aiohttp.test_utils import make_mocked_request
 
 import mailer
 
@@ -52,48 +57,62 @@ class FakeSMTP(aiosmtplib.SMTP):
         return {}, 'Ok'
 
 
-async def test_wrong_content_type(test_client, loop):
+def make_request(method, path, *, loop=None, headers=sentinel, data=None):
+    if headers is sentinel:
+        headers = {'content-type': 'application/json'}
+    if data is not None:
+        data = json.dumps(data).encode()
+        payload = streams.StreamReader(loop=loop)
+        payload.feed_data(data)
+        payload.feed_eof()
+        headers.update({'Content-Type': 'application/json',
+                        'Content-Length': str(len(data))})
+    else:
+        payload = sentinel
+    return make_mocked_request(method, path, headers=headers, payload=payload)
+
+
+async def test_wrong_content_type(loop):
     smtp = FakeSMTP(hostname='localhost', port=1025, loop=loop)
-    app = mailer.application(loop=loop, smtp=smtp)
-    client = await test_client(app)
-    resp = await client.post('/', headers=dict(content_type='application/octet-stream'))
-    assert resp.status == 415
-    text = await resp.text()
-    assert text == 'can only accept application/json, not application/octet-stream'
+    client = aiohttp.ClientSession(loop=loop)
+    request = make_request('POST', '/', headers={'content-type': 'application/octet-stream'})
+    event = mailer.PushEvent(client, smtp, request)
+    with pytest.raises(mailer.ResponseExit) as exc:
+        await event.process()
+    assert str(exc.value) == 'can only accept application/json, not application/octet-stream'
 
 
-async def test_empty_commits(test_client, loop):
+async def test_empty_commits(loop):
     data = data_with_commits.copy()
     del data['commits']
     smtp = FakeSMTP(hostname='localhost', port=1025, loop=loop)
-    app = mailer.application(loop=loop, smtp=smtp)
-    client = await test_client(app)
-    resp = await client.post('/', headers={'content-type': 'application/json'}, data=json.dumps(data))
-    assert resp.status == 204
-    text = await resp.text()
-    assert not text
+    client = aiohttp.ClientSession(loop=loop)
+    request = make_request('POST', '/', data=data, loop=loop)
+    event = mailer.PushEvent(client, smtp, request)
+    with pytest.raises(mailer.ResponseExit) as exc:
+        await event.process()
+    assert str(exc.value) == 'There is no commit to be processed.'
 
 
-async def test_invalid_branch_name(test_client, loop):
+async def test_invalid_branch_name(loop):
     data = data_with_commits.copy()
     data['ref'] = 'refs/heads/invalid'
     smtp = FakeSMTP(hostname='localhost', port=1025, loop=loop)
-    app = mailer.application(loop=loop, smtp=smtp)
-    client = await test_client(app)
-    resp = await client.post('/', headers={'content-type': 'application/json'}, data=json.dumps(data))
-    assert resp.status == 204
-    text = await resp.text()
-    assert not text
+    client = aiohttp.ClientSession(loop=loop)
+    request = make_request('POST', '/', data=data, loop=loop)
+    event = mailer.PushEvent(client, smtp, request)
+    with pytest.raises(mailer.ResponseExit) as exc:
+        await event.process()
+    assert str(exc.value) == 'Invalid branch name.'
 
 
-async def test_send_email(test_client, loop):
+async def test_send_email(loop):
     smtp = FakeSMTP(hostname='localhost', port=1025, loop=loop)
-    app = mailer.application(loop=loop, smtp=smtp)
-    client = await test_client(app)
-    resp = await client.post('/', headers={'content-type': 'application/json'}, data=json.dumps(data_with_commits))
-    assert resp.status == 200
-    text = await resp.text()
-    assert text == 'Ok'
+    client = aiohttp.ClientSession(loop=loop)
+    request = make_request('POST', '/', data=data_with_commits, loop=loop)
+    event = mailer.PushEvent(client, smtp, request)
+    resp = await event.process()
+    assert resp == 'Ok'
     assert len(smtp.sent_mails) == 1
     mail = smtp.sent_mails[0]
     assert mail['From'] == 'Berker Peksag <sender@example.com>'
