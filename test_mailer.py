@@ -134,7 +134,7 @@ async def test_send_email(loop):
 async def test_github_as_committer(loop):
     data = data_with_commits.copy()
     data['commits'][0]['committer'] = {
-        'name': 'GitHub', 'email': 'noreply@github.com', 'username': 'github',
+        'name': 'GitHub', 'email': 'noreply@github.com', 'username': 'web-flow',
     }
     smtp = FakeSMTP(hostname='localhost', port=1025, loop=loop)
     client = aiohttp.ClientSession(loop=loop)
