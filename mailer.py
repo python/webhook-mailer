@@ -62,8 +62,11 @@ files:
 {unified_diff}
 """
     msg = email.message.EmailMessage()
-    # TODO: Use committer name if it"s not GitHub as sender name
-    msg["From"] = email.utils.formataddr((commit["committer"]["name"], SENDER))
+    sender_name = commit['committer']['name']
+    if sender_name == 'GitHub':
+        # Show author's name as sender if committer info is 'GitHub'.
+        sender_name = commit['author']['name']
+    msg["From"] = email.utils.formataddr((sender_name, SENDER))
     msg["To"] = RECIPIENT
     msg["Subject"] = commit["message"].split("\n")[0]
     msg.set_content(template)

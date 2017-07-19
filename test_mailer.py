@@ -129,3 +129,19 @@ async def test_send_email(loop):
     body = mail.get_body().as_string()
     # TODO: We probably need a FakeDiff object to avoid making HTTP requests.
     assert diff in body
+
+
+async def test_github_as_committer(loop):
+    data = data_with_commits.copy()
+    data['commits'][0]['committer'] = {
+        'name': 'GitHub', 'email': 'noreply@github.com', 'username': 'github',
+    }
+    smtp = FakeSMTP(hostname='localhost', port=1025, loop=loop)
+    client = aiohttp.ClientSession(loop=loop)
+    request = make_request('POST', '/', data=data, loop=loop)
+    event = mailer.PushEvent(client, smtp, request)
+    resp = await event.process()
+    assert resp == 'Ok'
+    assert len(smtp.sent_mails) == 1
+    mail = smtp.sent_mails[0]
+    assert mail['From'] == 'cbiggles <sender@example.com>'
