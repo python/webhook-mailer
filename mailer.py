@@ -80,7 +80,7 @@ async def fetch_diff(client, url):
 
 async def send_email(smtp, message):
     async with smtp as server:
-        await server.connect(hostname=SMTP_HOSTNAME, port=SMTP_PORT, use_tls=False)
+        await server.connect()
         await server.login(SMTP_USERNAME, SMTP_PASSWORD)
         return (await server.send_message(message))
 
@@ -133,7 +133,7 @@ def application(loop=None, smtp=None):
     if loop is None:
         loop = asyncio.get_event_loop()
     if smtp is None:
-        smtp = aiosmtplib.SMTP(hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop)
+        smtp = aiosmtplib.SMTP(hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop, use_tls=False)
     app = aiohttp.web.Application(loop=loop)
     app.router.add_post('/', create_handler(
         lambda: aiohttp.ClientSession(loop=loop),
@@ -143,6 +143,6 @@ def application(loop=None, smtp=None):
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
-    smtp = aiosmtplib.SMTP(hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop)
+    smtp = aiosmtplib.SMTP(hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop, use_tls=False)
     app = application(loop, smtp)
     aiohttp.web.run_app(app, port=PORT)
