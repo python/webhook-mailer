@@ -25,18 +25,18 @@ index c2b4fc703f7..e0d0685fa7d 100644
 """
 
 data_with_commits = {
-    "ref": "refs/heads/master",
-    "commits": [
+    'ref': 'refs/heads/master',
+    'commits': [
         {
-            "id": "2d420b342509e6c2b597af82ea74c4cbb13e2abd",
-            "message": "Update .gitignore\n(cherry picked from commit 9d9ed0e5cceef45fd63dc1f7b3fe6e695da16e83)",
-            "timestamp": "2017-02-08T15:37:50+03:00",
-            "url": "https://github.com/fayton/cpython/commit/2d420b342509e6c2b597af82ea74c4cbb13e2abd",
-            "author": {"name": "cbiggles", "email": "berker.peksag+cbiggles@gmail.com", "username": "cbiggles"},
-            "committer": {"name": "Berker Peksag", "email": "berker.peksag@gmail.com", "username": "berkerpeksag"},
-            "added": [],
-            "removed": [],
-            "modified": [".gitignore"]
+            'id': '2d420b342509e6c2b597af82ea74c4cbb13e2abd',
+            'message': 'Update .gitignore\n(cherry picked from commit 9d9ed0e5cceef45fd63dc1f7b3fe6e695da16e83)',
+            'timestamp': '2017-02-08T15:37:50+03:00',
+            'url': 'https://github.com/fayton/cpython/commit/2d420b342509e6c2b597af82ea74c4cbb13e2abd',
+            'author': {'name': 'cbiggles', 'email': 'berker.peksag+cbiggles@gmail.com', 'username': 'cbiggles'},
+            'committer': {'name': 'Berker Peksag', 'email': 'berker.peksag@gmail.com', 'username': 'berkerpeksag'},
+            'added': [],
+            'removed': [],
+            'modified': ['.gitignore']
         }
     ],
 }
