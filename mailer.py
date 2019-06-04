@@ -12,7 +12,7 @@ import aiohttp.web
 import aiosmtplib
 
 
-ALLOWED_BRANCHES = ["2.7", "3.5", "3.6", "3.7", "master"]
+ALLOWED_BRANCHES = ["2.7", "3.5", "3.6", "3.7", "3.8", "master"]
 SENDER = os.environ.get("SENDER_EMAIL", "sender@example.com")
 RECIPIENT = os.environ.get("RECIPIENT_EMAIL", "recipient@example.com")
 SMTP_HOSTNAME = os.environ.get('SMTP_HOSTNAME', "localhost")
