@@ -4,6 +4,7 @@ import email.utils
 import http
 import http.client
 import os
+import re
 import traceback
 import sys
 
@@ -12,7 +13,7 @@ import aiohttp.web
 import aiosmtplib
 
 
-ALLOWED_BRANCHES = ["2.7", "3.5", "3.6", "3.7", "3.8", "master"]
+ALLOWED_BRANCHES_CRE = re.compile(r'^(\d\.\d+|main|master)$')
 SENDER = os.environ.get("SENDER_EMAIL", "sender@example.com")
 RECIPIENT = os.environ.get("RECIPIENT_EMAIL", "recipient@example.com")
 SMTP_HOSTNAME = os.environ.get('SMTP_HOSTNAME', "localhost")
@@ -106,7 +107,7 @@ class PushEvent:
         if 'commits' not in payload or len(payload['commits']) == 0:
             raise ResponseExit(status=http.HTTPStatus.NO_CONTENT, text='There is no commit to be processed.')
         branch_name = payload['ref'].split('/').pop()
-        if branch_name not in ALLOWED_BRANCHES:
+        if ALLOWED_BRANCHES_CRE.match(branch_name) is None:
             raise ResponseExit(status=http.HTTPStatus.NO_CONTENT, text='Invalid branch name.')
         # Since we use the 'squash and merge' button, there will
         # always be single commit.
