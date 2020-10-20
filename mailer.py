@@ -22,6 +22,7 @@ SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
 PORT = int(os.environ.get('PORT', 8585))
 
+
 class ResponseExit(Exception):
 
     def __init__(self, status=None, text=None) -> None:
@@ -42,16 +43,14 @@ def get_diff_stat(commit):
     return "\n".join(result)
 
 
-def build_message(commit, **kwargs):
-    branch = kwargs.get("branch")
-    diff_stat = kwargs.get("diff_stat")
-    unified_diff = kwargs.get("unified_diff")
+def build_message(commit, branch=None, diff_stat=None, unified_diff=None, pusher=None):
+    committer = pusher or commit["committer"]
     template = f"""\
 {commit["url"]}
 commit: {commit["id"]}
 branch: {branch}
 author: {commit["author"]["name"]} <{commit["author"]["email"]}>
-committer: {commit["committer"]["name"]} <{commit["committer"]["email"]}>
+committer: {committer["name"]} <{committer["email"]}>
 date: {commit["timestamp"]}
 summary:
 
@@ -63,7 +62,7 @@ files:
 {unified_diff}
 """
     msg = email.message.EmailMessage()
-    sender_name = commit['committer']['name']
+    sender_name = committer['name']
     if sender_name == 'GitHub':
         # Show author's name as sender if committer info is 'GitHub'.
         sender_name = commit['author']['name']
@@ -115,7 +114,7 @@ class PushEvent:
         unified_diff = await fetch_diff(self.client, commit['url'] + '.diff')
         diff_stat = get_diff_stat(commit)
         message = build_message(commit, branch=branch_name, diff_stat=diff_stat,
-                                unified_diff=unified_diff)
+                                unified_diff=unified_diff, pusher=payload.get('pusher'))
         _, response = await send_email(self.smtp, message)
         return response
 
@@ -144,6 +143,7 @@ def application(loop):
         lambda: aiosmtplib.SMTP(hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop, use_tls=False),
     ))
     return app
+
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()

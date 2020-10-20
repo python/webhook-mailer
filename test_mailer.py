@@ -37,8 +37,13 @@ data_with_commits = {
             'added': [],
             'removed': [],
             'modified': ['.gitignore']
-        }
+        },
     ],
+}
+
+data_with_pusher = {
+    **data_with_commits,
+    'pusher': {'name': 'Berker Peksag', 'email': 'berker.peksag@gmail.com', 'username': 'berkerpeksag'},
 }
 
 
@@ -145,3 +150,20 @@ async def test_github_as_committer(loop):
     assert len(smtp.sent_mails) == 1
     mail = smtp.sent_mails[0]
     assert mail['From'] == 'cbiggles <sender@example.com>'
+
+
+async def test_github_as_committer_with_pusher(loop):
+    data = data_with_pusher.copy()
+    data['commits'][0]['committer'] = {
+        'name': 'GitHub', 'email': 'noreply@github.com', 'username': 'web-flow',
+    }
+    smtp = FakeSMTP(hostname='localhost', port=1025, loop=loop)
+    client = aiohttp.ClientSession(loop=loop)
+    request = make_request('POST', '/', data=data, loop=loop)
+    event = mailer.PushEvent(client, smtp, request)
+    resp = await event.process()
+    assert resp == 'Ok'
+    assert len(smtp.sent_mails) == 1
+    mail = smtp.sent_mails[0]
+    assert mail['From'] == 'Berker Peksag <sender@example.com>'
+    assert 'committer: Berker Peksag <berker.peksag@gmail.com>' in str(mail)
