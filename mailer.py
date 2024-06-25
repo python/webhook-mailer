@@ -21,6 +21,7 @@ SMTP_PORT = int(os.environ.get('SMTP_PORT', 1025))
 SMTP_USERNAME = os.environ.get('SMTP_USERNAME')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD')
 PORT = int(os.environ.get('PORT', 8585))
+UNIX_SOCKET = os.environ.get('UNIX_SOCKET', None)
 
 
 class ResponseExit(Exception):
@@ -134,6 +135,8 @@ def create_handler(create_client, smtp_client):
                 return aiohttp.web.Response(status=http.HTTPStatus.INTERNAL_SERVER_ERROR)
     return handler
 
+async def health(request):
+    return aiohttp.web.Response(status=200)
 
 def application(loop):
     app = aiohttp.web.Application(loop=loop)
@@ -142,10 +145,11 @@ def application(loop):
         # TODO: remove use_tls=False if we won't use starttls
         lambda: aiosmtplib.SMTP(hostname=SMTP_HOSTNAME, port=SMTP_PORT, loop=loop, use_tls=False),
     ))
+    app.router.add_route("GET", "/_health", health)
     return app
 
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     app = application(loop)
-    aiohttp.web.run_app(app, port=PORT)
+    aiohttp.web.run_app(app, port=PORT, path=UNIX_SOCKET)

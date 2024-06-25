@@ -14,7 +14,7 @@ import mailer
 
 diff = """\
 diff --git a/.gitignore b/.gitignore
-index c2b4fc703f7..e0d0685fa7d 100644
+index c2b4fc703f7c..e0d0685fa7da 100644
 --- a/.gitignore
 +++ b/.gitignore
 @@ -93,3 +93,4 @@ htmlcov/

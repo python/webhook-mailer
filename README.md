@@ -5,11 +5,11 @@ A webhook to send every [CPython][cpython] commit to
 
 ## Requirements
 
-* CPython 3.6
+* CPython 3.7
 * aiohttp
 * aiosmtplib
 
-See [requirements.txt](requirements.txt) for details.
+See [requirements](requirements) for details.
 
 
 ## Configuration
