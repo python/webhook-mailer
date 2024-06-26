@@ -17,10 +17,9 @@ jobs:
           python-version-file: 'python-version'
       - name: Install Python dependencies
         run: |
-          pip install -U setuptools wheel pip
-          pip install -r requirements/main.txt
-          pip install -r requirements/dev.txt
-          pip check
+          python -m pip install -U setuptools wheel pip
+          python -m pip install tox
+      - name: Lint
+        run: tox -e lint
       - name: Run Tests
-        run: |
-          pytest
+        run: tox -e py37
