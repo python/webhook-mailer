@@ -42,7 +42,19 @@ $ python -m aiosmtpd -nd -l localhost:1025
 ```
 
 
+## Testing
+
+Testing requires [tox][tox] to be installed, then is as simple as running
+
+```sh
+$ tox
+```
+
+To run the linter, reformatter, and tests in one shot.
+
+
 [cpython]: https://github.com/python/cpython
 [python-checkins]: https://mail.python.org/mailman/listinfo/python-checkins
 [ni]: https://github.com/python/the-knights-who-say-ni
 [aiosmtpd]: https://aiosmtpd.readthedocs.io/en/latest/
+[tox]: https://tox.wiki
